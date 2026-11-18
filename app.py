@@ -886,6 +886,7 @@ with tabs[6]:
 # ACCURACY TRACKER
 # ==================================================
 
+
 with tabs[7]:
 
     st.header("📋 Prediction Accuracy Tracker")
@@ -903,6 +904,8 @@ with tabs[7]:
 
         st.info("No game predictions have been saved yet.")
 
+    st.divider()
+
     st.subheader("Saved Player Prop Research")
 
     if st.session_state.prop_log:
@@ -916,19 +919,70 @@ with tabs[7]:
 
         st.info("No player prop research has been saved yet.")
 
-    st.caption(
-        "Prediction history is stored for this session only."
+    st.divider()
+
+    st.subheader("📊 Game Prediction Accuracy")
+
+    if "accuracy_log" not in st.session_state:
+        st.session_state.accuracy_log = []
+
+    if st.session_state.prediction_log:
+
+        correct = sum(
+            1 for item in st.session_state.accuracy_log
+            if item["result"] == "Correct"
+        )
+
+        total = len(st.session_state.accuracy_log)
+
+        incorrect = total - correct
+
+        accuracy = (
+            (correct / total) * 100
+            if total > 0 else 0
+        )
+
+        col1, col2, col3 = st.columns(3)
+
+        col1.metric("Correct", correct)
+        col2.metric("Incorrect", incorrect)
+        col3.metric("Accuracy", f"{accuracy:.1f}%")
+
+    else:
+
+        st.info("Save game predictions to begin tracking accuracy.")
+
+    st.divider()
+
+    st.subheader("📝 Record Prediction Result")
+
+    prediction_name = st.text_input(
+        "Game or Player Name",
+        key="accuracy_prediction_name"
     )
 
+    prediction_result = st.selectbox(
+        "Prediction Result",
+        ["Correct", "Incorrect"]
+    )
 
-# ==================================================
-# DASHBOARD FOOTER
-# ==================================================
+    if st.button("Save Prediction Result"):
 
-st.divider()
+        if prediction_name.strip():
 
-st.caption(
-    "NFL AI SPORTS LAB Version 3.1 | "
-    "Research and simulation tool | "
-    "Always verify information before betting."
-)
+            st.session_state.accuracy_log.append({
+                "prediction": prediction_name,
+                "result": prediction_result,
+                "date": datetime.now().strftime("%Y-%m-%d")
+            })
+
+            st.success("Prediction result saved!")
+
+        else:
+
+            st.warning("Please enter a game or player name.")
+
+    st.caption(
+        "Accuracy tracking is currently session-based. "
+        "Permanent storage will be added in a future upgrade."
+    )
