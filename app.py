@@ -857,7 +857,7 @@ with tabs[6]:
 
     st.subheader("AI Research Assistant")
 
-    r
+   
 
 
     research_question = st.text_area(
