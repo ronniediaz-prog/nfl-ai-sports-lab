@@ -858,3 +858,77 @@ with tabs[6]:
     st.subheader("AI Research Assistant")
 
     r
+
+
+    research_question = st.text_area(
+        "What NFL matchup or player would you like to research?"
+    )
+
+    if st.button("Analyze Research Question"):
+
+        if research_question.strip():
+
+            st.info(
+                "Research question saved. Verify current NFL "
+                "statistics, injuries, starting lineups and "
+                "betting lines before making a decision."
+            )
+
+            st.write("Your research question:")
+            st.write(research_question)
+
+        else:
+
+            st.warning("Enter a research question first.")
+
+
+# ==================================================
+# ACCURACY TRACKER
+# ==================================================
+
+with tabs[7]:
+
+    st.header("📋 Prediction Accuracy Tracker")
+
+    st.subheader("Saved Game Predictions")
+
+    if st.session_state.prediction_log:
+
+        st.dataframe(
+            st.session_state.prediction_log,
+            use_container_width=True
+        )
+
+    else:
+
+        st.info("No game predictions have been saved yet.")
+
+    st.subheader("Saved Player Prop Research")
+
+    if st.session_state.prop_log:
+
+        st.dataframe(
+            st.session_state.prop_log,
+            use_container_width=True
+        )
+
+    else:
+
+        st.info("No player prop research has been saved yet.")
+
+    st.caption(
+        "Prediction history is stored for this session only."
+    )
+
+
+# ==================================================
+# DASHBOARD FOOTER
+# ==================================================
+
+st.divider()
+
+st.caption(
+    "NFL AI SPORTS LAB Version 3.1 | "
+    "Research and simulation tool | "
+    "Always verify information before betting."
+)
