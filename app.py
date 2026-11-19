@@ -887,9 +887,15 @@ with tabs[6]:
 # ==================================================
 
 
+
 with tabs[7]:
 
     st.header("📋 Prediction Accuracy Tracker")
+
+    if "accuracy_log" not in st.session_state:
+        st.session_state.accuracy_log = []
+
+    # SAVED GAME PREDICTIONS
 
     st.subheader("Saved Game Predictions")
 
@@ -906,6 +912,8 @@ with tabs[7]:
 
     st.divider()
 
+    # SAVED PLAYER PROP RESEARCH
+
     st.subheader("Saved Player Prop Research")
 
     if st.session_state.prop_log:
@@ -921,38 +929,7 @@ with tabs[7]:
 
     st.divider()
 
-    st.subheader("📊 Game Prediction Accuracy")
-
-    if "accuracy_log" not in st.session_state:
-        st.session_state.accuracy_log = []
-
-    if st.session_state.prediction_log:
-
-        correct = sum(
-            1 for item in st.session_state.accuracy_log
-            if item["result"] == "Correct"
-        )
-
-        total = len(st.session_state.accuracy_log)
-
-        incorrect = total - correct
-
-        accuracy = (
-            (correct / total) * 100
-            if total > 0 else 0
-        )
-
-        col1, col2, col3 = st.columns(3)
-
-        col1.metric("Correct", correct)
-        col2.metric("Incorrect", incorrect)
-        col3.metric("Accuracy", f"{accuracy:.1f}%")
-
-    else:
-
-        st.info("Save game predictions to begin tracking accuracy.")
-
-    st.divider()
+    # RECORD PREDICTION RESULTS
 
     st.subheader("📝 Record Prediction Result")
 
@@ -961,9 +938,16 @@ with tabs[7]:
         key="accuracy_prediction_name"
     )
 
+    prediction_type = st.selectbox(
+        "Prediction Category",
+        ["Game Prediction", "Player Prop"],
+        key="accuracy_prediction_type"
+    )
+
     prediction_result = st.selectbox(
         "Prediction Result",
-        ["Correct", "Incorrect"]
+        ["Correct", "Incorrect"],
+        key="accuracy_prediction_result"
     )
 
     if st.button("Save Prediction Result"):
@@ -971,7 +955,8 @@ with tabs[7]:
         if prediction_name.strip():
 
             st.session_state.accuracy_log.append({
-                "prediction": prediction_name,
+                "prediction": prediction_name.strip(),
+                "type": prediction_type,
                 "result": prediction_result,
                 "date": datetime.now().strftime("%Y-%m-%d")
             })
@@ -982,7 +967,196 @@ with tabs[7]:
 
             st.warning("Please enter a game or player name.")
 
+    st.divider()
+
+    # ACCURACY STATISTICS
+
+    st.subheader("📊 Prediction Accuracy Statistics")
+
+    if st.session_state.accuracy_log:
+
+        accuracy_df = pd.DataFrame(
+            st.session_state.accuracy_log
+        )
+
+        # SUPPORT OLDER RECORDS
+
+        if "type" not in accuracy_df.columns:
+            accuracy_df["type"] = "Game Prediction"
+
+        if "result" not in accuracy_df.columns:
+            accuracy_df["result"] = ""
+
+        accuracy_df["type"] = (
+            accuracy_df["type"].fillna("Game Prediction")
+        )
+
+        accuracy_df["result"] = (
+            accuracy_df["result"].fillna("").astype(str)
+        )
+
+        # KEEP VALID RESULTS
+
+        accuracy_df = accuracy_df[
+            accuracy_df["result"].str.lower().isin(
+                ["correct", "incorrect"]
+            )
+        ]
+
+        # OVERALL PERFORMANCE
+
+        total_predictions = len(accuracy_df)
+
+        correct_predictions = (
+            accuracy_df["result"].str.lower() == "correct"
+        ).sum()
+
+        incorrect_predictions = (
+            accuracy_df["result"].str.lower() == "incorrect"
+        ).sum()
+
+        overall_accuracy = (
+            correct_predictions / total_predictions * 100
+            if total_predictions > 0 else 0
+        )
+
+        st.subheader("🏆 Overall Performance")
+
+        col1, col2, col3, col4 = st.columns(4)
+
+        col1.metric(
+            "Total Predictions",
+            total_predictions
+        )
+
+        col2.metric(
+            "Correct",
+            int(correct_predictions)
+        )
+
+        col3.metric(
+            "Incorrect",
+            int(incorrect_predictions)
+        )
+
+        col4.metric(
+            "Overall Accuracy",
+            f"{overall_accuracy:.1f}%"
+        )
+
+        st.divider()
+
+        # GAME PREDICTION PERFORMANCE
+
+        st.subheader("🏈 Game Prediction Performance")
+
+        game_df = accuracy_df[
+            accuracy_df["type"] == "Game Prediction"
+        ]
+
+        if not game_df.empty:
+
+            game_total = len(game_df)
+
+            game_correct = (
+                game_df["result"].str.lower() == "correct"
+            ).sum()
+
+            game_incorrect = game_total - game_correct
+
+            game_accuracy = (
+                game_correct / game_total * 100
+            )
+
+            col1, col2, col3 = st.columns(3)
+
+            col1.metric("Game Predictions", game_total)
+            col2.metric("Correct", int(game_correct))
+            col3.metric("Accuracy", f"{game_accuracy:.1f}%")
+
+        else:
+
+            st.info("No game prediction results recorded yet.")
+
+        st.divider()
+
+        # PLAYER PROP PERFORMANCE
+
+        st.subheader("👤 Player Prop Performance")
+
+        prop_df = accuracy_df[
+            accuracy_df["type"] == "Player Prop"
+        ]
+
+        if not prop_df.empty:
+
+            prop_total = len(prop_df)
+
+            prop_correct = (
+                prop_df["result"].str.lower() == "correct"
+            ).sum()
+
+            prop_incorrect = prop_total - prop_correct
+
+            prop_accuracy = (
+                prop_correct / prop_total * 100
+            )
+
+            col1, col2, col3 = st.columns(3)
+
+            col1.metric("Player Props", prop_total)
+            col2.metric("Correct", int(prop_correct))
+            col3.metric("Accuracy", f"{prop_accuracy:.1f}%")
+
+        else:
+
+            st.info("No player prop results recorded yet.")
+
+        st.divider()
+
+        # RESULTS CHART
+
+        st.subheader("📈 Prediction Results Chart")
+
+        chart_df = pd.DataFrame({
+            "Results": ["Correct", "Incorrect"],
+            "Predictions": [
+                int(correct_predictions),
+                int(incorrect_predictions)
+            ]
+        })
+
+        st.bar_chart(
+            chart_df.set_index("Results")
+        )
+
+        st.divider()
+
+        # COMPLETE HISTORY
+
+        st.subheader("📚 Complete Prediction History")
+
+        if not accuracy_df.empty:
+
+            st.dataframe(
+                accuracy_df,
+                use_container_width=True
+            )
+
+        else:
+
+            st.info(
+                "No valid prediction results recorded yet."
+            )
+
+    else:
+
+        st.info(
+            "Record game predictions and player props "
+            "to begin tracking accuracy."
+        )
+
     st.caption(
-        "Accuracy tracking is currently session-based. "
+        "Prediction accuracy is currently session-based. "
         "Permanent storage will be added in a future upgrade."
     )
