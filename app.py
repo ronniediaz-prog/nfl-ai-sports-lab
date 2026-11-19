@@ -1115,21 +1115,104 @@ with tabs[7]:
 
         st.divider()
 
-        # RESULTS CHART
+        
+        # ACCURACY PERCENTAGE GRAPHS
 
-        st.subheader("📈 Prediction Results Chart")
+        st.subheader("📈 Accuracy Percentage Graphs")
 
-        chart_df = pd.DataFrame({
-            "Results": ["Correct", "Incorrect"],
-            "Predictions": [
-                int(correct_predictions),
-                int(incorrect_predictions)
-            ]
-        })
+        if total_predictions > 0:
 
-        st.bar_chart(
-            chart_df.set_index("Results")
-        )
+            # OVERALL, GAME AND PLAYER PROP ACCURACY
+
+            accuracy_labels = ["Overall"]
+            accuracy_values = [overall_accuracy]
+
+            if not game_df.empty:
+                accuracy_labels.append("Game Predictions")
+                accuracy_values.append(game_accuracy)
+
+            if not prop_df.empty:
+                accuracy_labels.append("Player Props")
+                accuracy_values.append(prop_accuracy)
+
+            accuracy_fig = go.Figure(
+                data=[
+                    go.Bar(
+                        x=accuracy_labels,
+                        y=accuracy_values,
+                        text=[
+                            f"{value:.1f}%"
+                            for value in accuracy_values
+                        ],
+                        textposition="outside"
+                    )
+                ]
+            )
+
+            accuracy_fig.update_layout(
+                title="Prediction Accuracy by Category",
+                yaxis_title="Accuracy (%)",
+                yaxis=dict(
+                    range=[0, 100],
+                    ticksuffix="%"
+                ),
+                xaxis_title="Prediction Category",
+                showlegend=False
+            )
+
+            st.plotly_chart(
+                accuracy_fig,
+                use_container_width=True
+            )
+
+            # CORRECT VS INCORRECT PERCENTAGES
+
+            correct_percentage = (
+                correct_predictions / total_predictions * 100
+            )
+
+            incorrect_percentage = (
+                incorrect_predictions / total_predictions * 100
+            )
+
+            results_fig = go.Figure(
+                data=[
+                    go.Bar(
+                        x=["Correct", "Incorrect"],
+                        y=[
+                            correct_percentage,
+                            incorrect_percentage
+                        ],
+                        text=[
+                            f"{correct_percentage:.1f}%",
+                            f"{incorrect_percentage:.1f}%"
+                        ],
+                        textposition="outside"
+                    )
+                ]
+            )
+
+            results_fig.update_layout(
+                title="Correct vs Incorrect Results",
+                yaxis_title="Percentage (%)",
+                yaxis=dict(
+                    range=[0, 100],
+                    ticksuffix="%"
+                ),
+                showlegend=False
+            )
+
+            st.plotly_chart(
+                results_fig,
+                use_container_width=True
+            )
+
+        else:
+
+            st.info(
+                "Valid prediction results are needed "
+                "before percentage graphs can be displayed."
+            )
 
         st.divider()
 
