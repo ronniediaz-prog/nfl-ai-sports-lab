@@ -16,7 +16,7 @@ st.set_page_config(
 
 st.title("🏈 NFL AI SPORTS LAB")
 st.subheader("Advanced NFL Research & Prediction Center")
-st.success("Dashboard Version 3.1 — Live Data Development")
+st.success("Dashboard Version 3.2 — Prediction Accuracy & Research")
 
 st.info(
     "Player statistics are retrieved from nflverse when available. "
